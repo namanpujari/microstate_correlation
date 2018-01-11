@@ -1,0 +1,23 @@
+1.  Verification function
+
+	2 dictionaries.
+	First should be update to head3.lst update in microstate_analysis
+	so that the dictionary ALSO contains occupancies. head3.lst already has
+	the conformer ids.
+
+	update my own classs to take in fort.38, converts into dictionary where keys
+	are conformer ids and the values are occupancies. This will be checked against
+	the dictionary created in the previous step
+	
+	can return list of ids that do not match up, list of ids that match up (in terms of matching occupancies) 
+	and list of missing ids
+	
+2.  Expand trajectory based on state count next to each record.
+	
+	E.g. if we have [1, 32 ... 43, 21, 31] then 2 as state count then the trajectory
+	would be expanded into 
+	
+	[[1, 32 ... 43, 21, 31]
+	 [1, 32 ... 32, 21, 31]]
+
+step2 out check if different chains have different ids
