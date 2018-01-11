@@ -9,13 +9,13 @@ Properties:
 
 residue_list (a python array containing all of the residues
 in the ms.dat file that is analyzed)
-trajectory (a n_records * n_res size ndarray
+trajectory (a total_records * n_res size ndarray
 that stores the conformer of a residues by column, that are in a particular
 microstate. This is the most important feature of ms.dat and the parser)
 state_count (each record can have particular conformer configuration, and how many
 times that microstate was considered. The latter part is stored in state_count, and
-its size, by basic logic, is n_records)
-energies (contains the energy at the given record, is a np.array of size n_records)
+its size, by basic logic, is total_records)
+energies (contains the energy at the given record, is a np.array of size total_records)
 """
 
 from __future__ import print_function
@@ -45,16 +45,17 @@ class MicrostateCorrelation(object):
 			# self.trajectory = newly created np.array
 			sys.exit('Not yet implemented')
 		# We can use an in-built, scipy.stats method known as itemfreq
-		conf_count_dict = {} # Initiate python dictionary for counting the 
+		self.conf_count_dict = {} # Initiate python dictionary for counting the 
 		# conformer counts and matching it with respective residues. This is 
 		# a useful data structure in this case.
+		self.occupancy_dict = {} # Initiate python dictionary for calculating the 
+		# occupancy. occ = count / total_records
 		for residue in range(0, self.trajectory.shape[1], 1):
 			res_conf_count = itemfreq(self.trajectory[:, residue].ravel())
-			conf_count_dict[self.res_list[residue]] = res_conf_count
-		self.conf_counts = conf_count_dict # Transfer into a class property
+			self.conf_count_dict[self.res_list[residue]] = res_conf_count
 		if(return_case == True): # Add functionality so it is useable outside
 		# the scope of the class
-			return conf_count_dict
+			return conf_count_dict, occupancy_dict
 		
 if __name__ == '__main__':
 	# Execute the functions here
@@ -63,8 +64,9 @@ if __name__ == '__main__':
 	correl.conformer_count()
 	
 	# TEST 
-	some_random_numbers = [1, 2, 32, 56, 101, 211, 323]
+	print(correl.trajectory[-3:])
+	some_random_numbers = [1, 2, 32, 56, 76, 101, 132, 211, 242, 323, 390]
+	
 	for i in some_random_numbers:
-		print(correl.conf_counts.keys()[i])
-		print(correl.conf_counts[correl.res_list[i]])
-		print()
+		print(correl.conf_count_dict.keys()[i])
+		print(correl.conf_count_dict[correl.res_list[i]])

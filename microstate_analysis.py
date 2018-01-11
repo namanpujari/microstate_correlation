@@ -190,9 +190,9 @@ class MicrostateAnalysis(object):
                 # for-loop. For this to work it is required that the product of np.asarray(...) has
                 # the same amount of columns as the trajector, which is the number of residues. Hence
                 # my hypothesis at this time is that the RHS contains conformer ids for each residue.
-                
+
                 #print(struct.unpack(str(self.n_res) + "H", bytes_conf_ids)[-2:])
-                
+
                 state_count = struct.unpack("i", bytes_state_count)[0] # Converts the binary data
                 # of the state count to an integer.
                 self.total_microstates += state_count # Class property total_microstate is increased
