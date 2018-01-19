@@ -18,7 +18,7 @@ its size, by basic logic, is total_records)
 energies (contains the energy at the given record, is a np.array of size total_records)
 """
 
-from __future__ import print_function
+from __future__ import print_function	
 import os
 import sys
 import numpy as np
@@ -32,6 +32,8 @@ class MicrostateCorrelation(object):
 		self.MA = MicrostateAnalysis(ms_dat_file, head3_lst_file)
 		self.MA.generate_byte_indices()
 		self.MA.parse_records()
+		self.total_records = self.MA.total_records
+		self.state_counts = self.MA.state_counts
 		self.trajectory = self.MA.trajectory
 		self.res_list = self.MA.residue_list
 		# Handed over the trajectory to THIS particular class
@@ -70,3 +72,4 @@ if __name__ == '__main__':
 	for i in some_random_numbers:
 		print(correl.conf_count_dict.keys()[i])
 		print(correl.conf_count_dict[correl.res_list[i]])
+
