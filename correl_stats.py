@@ -29,13 +29,14 @@ from utils import function_timer
 class MicrostateCorrelation(object):
 	def __init__(self, ms_dat_file, head3_lst_file):
 		# Basic inheritance
-		self.MA = MicrostateAnalysis(ms_dat_file, head3_lst_file)
+		self.MA = MicrostateAnalysis(ms_dat_file, head3_lst_file, head3required = True)
 		self.MA.generate_byte_indices()
 		self.MA.parse_records()
 		self.total_records = self.MA.total_records
 		self.state_counts = self.MA.state_counts
 		self.trajectory = self.MA.trajectory
 		self.res_list = self.MA.residue_list
+		self.conformer_data = self.MA.conformer_data
 		# Handed over the trajectory to THIS particular class
 		
 	@function_timer

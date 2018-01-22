@@ -70,11 +70,11 @@ class MicrostateAnalysis(object):
         #with open(ms_gold_file, "r") as ms_gold:
         #    self.n_res = len([res.strip() for res in ms_gold.readlines() if len(res) != 0])
         
-"""
-First should be update to head3.lst update in microstate_analysis
-    so that the dictionary ALSO contains occupancies. head3.lst already has
-    the conformer ids.
-"""
+        # 
+        # First should be update to head3.lst update in microstate_analysis
+        #     so that the dictionary ALSO contains occupancies. head3.lst already has
+        #     the conformer ids.
+        # 
 
         if head3required == True:
             conf_data = {} # Initialized dictionary, conf_data. (Data for the conformers)

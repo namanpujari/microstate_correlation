@@ -39,35 +39,73 @@ import sys
 step2 out check if different chains have different ids
 '''
 
-def do_comparision_step2(fort38_location):
+def convert_to_occupancies(count_dictionary):
 	''' Follows the instruction shown in step 2 of the next_steps.txt file.
 	Runs an instance of MicrstateCorrelation, calculated occupancies, then compares
 	with the one displayed in fort.38 (actual occupancies)
 	'''
-	correlation_instance = MicrostateCorrelation('ms.dat', 'head3.lst')
-	conf_counts = MicrostateCorrelation.conformer_count() # Returns dictionary with residue
+	# count_dictionary is with residue
 	# as key and list of conf ID and its instances as value. THESE VALUES WILL NOT BE ENTIRELY CORRECT
 	# AS WE ARE NOT TAKING INTO ACCOUNT THE EXPANDED TRAJECTORY (WHERE WE CONSIDER STATE COUNT FOR 
 	# EACH RECORD). Let's do it without changing it first
 	occupancy_dict = {}
-	for key in conf_counts.keys():
-		residue_conf_count_list = conf_counts[key]
+	for key in count_dictionary.keys():
+		residue_conf_count_list = count_dictionary[key]
 		occupancy_dict[key] = np.array([])
-		for row in residue_conf_count_list.shape[0]:
-			# We will use total_records to calculte conformer occupancy for now.
+		for row in range(residue_conf_count_list.shape[0]):
+			# We will use total_records to calculate conformer occupancy for now.
 			# When the problem mentioned earlier is solved, we can transition to 
 			# state counts
 			conf_id = residue_conf_count_list[row][0]
-			occupancy = residue_conf_count_list[row][1] / MicrostateCorrelation.total_records
+			occupancy = residue_conf_count_list[row][1] / MicrostateCorrelation.total_records # total_record to change to state_counts
+			############################################## ^ IT WOULD BE BETTER TO MAKE THIS  ####
+			##############################################     FUNCTIONS INTO METHODS IN THE  ####
+			##############################################       MICROSTATECORRELATION CLASS  ####
 			occupancy_array = np.array([conf_id, occupancy])
 			np.append(occupancy_dict[key], occupancy_array, axis = 0)
 	# By now we have a new dictionary, with each key having a value in the form a list showing conformer id
 	# and its corresponding occupancy.
+	return occupancy_dict
+
+
+def compare_with_fort38(fort38_location, theoretical_occ, experimental_counts):
+	conformers_extra = []
+	conformers_missing = []
+	conformers_incorrect = []
+	experiental_occ = convert_to_occupancies(experimental_counts)
 	with open(fort38_location, 'r') as fort38:
-		occupancy_dict_from_fort38 = {}
-		for line in fort38_location.readlines()[1:]:
-			# To be continued...
+		interesection = np.interesect1d(np.array(theoretical_occ.keys()), np.array(experimental_occ.keys()))
+		union = np.union1d(np.array(theoretical_occ.keys()), np.array(experimental_occ.keys()))
+		print(interesection)
+		print(union)
+		'''
+		for index, line in enumerate(fort38_location.readlines()[1:]):
+			# The indexes of the file lines are closely related to the 
+			# conformer ID as they, too, progress in an arithmetic pattern
+			# with a step size of exactly 1.
+			
+			if((index in list(occupancy_dict.keys())) && 
+				(index not in list(conformer_data.keys()))):
+				conformers_extra = conformers_missing.append(index)
+			elif((index not in list(occupancy_dict.keys())) && 
+				(index in list(conformer_data.keys()))):
+				conformers_missing = conformers_missing.append(index)
+			'''
 	return conformers_incorrect, conformers_missing
+
+if __name__ == '__main__':
+	correlation_instance = MicrostateCorrelation('ms.dat', 'head3.lst')
+	# Extracting all the relevant properties/values/methods from the class, to apply 
+	# in this context
+	conf_id_data = correlation_instance.conformer_data
+	correlation_instance.conformer_count()
+	conf_counts = correlation_instance.conf_count_dict
+	print(type(conf_counts))
+ 
+
+	# Now we can execute the functions above.
+	compare_with_fort38('fort.38', conf_id_data, conf_counts)
+
 
 
 
