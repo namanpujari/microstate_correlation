@@ -39,7 +39,7 @@ import sys
 step2 out check if different chains have different ids
 '''
 
-def convert_to_occupancies(count_dictionary):
+def convert_to_occupancies(count_dictionary. return_case=False):
 	''' Follows the instruction shown in step 2 of the next_steps.txt file.
 	Runs an instance of MicrstateCorrelation, calculated occupancies, then compares
 	with the one displayed in fort.38 (actual occupancies)
@@ -48,7 +48,7 @@ def convert_to_occupancies(count_dictionary):
 	# as key and list of conf ID and its instances as value. THESE VALUES WILL NOT BE ENTIRELY CORRECT
 	# AS WE ARE NOT TAKING INTO ACCOUNT THE EXPANDED TRAJECTORY (WHERE WE CONSIDER STATE COUNT FOR 
 	# EACH RECORD). Let's do it without changing it first
-	occupancy_dict = {}
+	self.occupancy_dict = {}
 	for key in count_dictionary.keys():
 		residue_conf_count_list = count_dictionary[key]
 		occupancy_dict[key] = np.array([])
@@ -65,7 +65,8 @@ def convert_to_occupancies(count_dictionary):
 			np.append(occupancy_dict[key], occupancy_array, axis = 0)
 	# By now we have a new dictionary, with each key having a value in the form a list showing conformer id
 	# and its corresponding occupancy.
-	return occupancy_dict
+	if(return_case = True):
+		return occupancy_dict
 
 
 def compare_with_fort38(fort38_location, theoretical_occ, experimental_counts):
@@ -78,20 +79,8 @@ def compare_with_fort38(fort38_location, theoretical_occ, experimental_counts):
 		union = np.union1d(np.array(theoretical_occ.keys()), np.array(experimental_occ.keys()))
 		print(interesection)
 		print(union)
-		'''
-		for index, line in enumerate(fort38_location.readlines()[1:]):
-			# The indexes of the file lines are closely related to the 
-			# conformer ID as they, too, progress in an arithmetic pattern
-			# with a step size of exactly 1.
-			
-			if((index in list(occupancy_dict.keys())) && 
-				(index not in list(conformer_data.keys()))):
-				conformers_extra = conformers_missing.append(index)
-			elif((index not in list(occupancy_dict.keys())) && 
-				(index in list(conformer_data.keys()))):
-				conformers_missing = conformers_missing.append(index)
-			'''
-	return conformers_incorrect, conformers_missing
+	
+		return conformers_incorrect, conformers_missing
 
 if __name__ == '__main__':
 	correlation_instance = MicrostateCorrelation('ms.dat', 'head3.lst')
