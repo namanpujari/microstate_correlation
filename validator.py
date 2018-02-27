@@ -79,7 +79,7 @@ def compare_with_fort38(fort38_location, theoretical_occ, experimental_counts):
 		union = np.union1d(np.array(theoretical_occ.keys()), np.array(experimental_occ.keys()))
 		print(interesection)
 		print(union)
-	
+		
 		return conformers_incorrect, conformers_missing
 
 if __name__ == '__main__':
