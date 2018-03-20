@@ -137,6 +137,9 @@ class MicrostateCorrelation(object):
 		theoretical_conformers = self.fort38_by_id.keys() # Each value is 2 member array. The second
 		# value is the occupancy, unlike the case for PARSED_OCCUPANCY_BY_ID, which simply contains
 		# floating point values for each of its keys.
+		# for conf in self.fort38_by_id.keys():
+		# 	print(str(self.fort38_by_id[conf][0]) + "   " + str(self.fort38_by_id[conf][1]))
+
 		experimental_conformers = self.PARSED_OCCUPANCY_BY_ID.keys()
 		intersection = np.intersect1d(theoretical_conformers, experimental_conformers)
 		conformers_missing = np.setdiff1d(theoretical_conformers, intersection)
@@ -166,7 +169,6 @@ class MicrostateCorrelation(object):
 			else: RESULTS["missing"] = np.append(RESULTS["missing"], candidate_conformer) #RESULTS["missing"].append(candidate_conformer)
 
 		return RESULTS
-
 		
 if __name__ == '__main__':
 	# Execute the functions here
@@ -175,7 +177,28 @@ if __name__ == '__main__':
 	correl.conformer_count()
 	correl.get_occupancies()
 
-	# # TEST
+	# WRITE FILE
+	# Write txt file detailing missing and incorrect conformers in the format
+	# (conformer id/name       Occupancy)
+	res = correl.fort38_compare()
+	with open("missing_conformers.txt", "w") as write_file:
+		write_file.write("ID\t\tNAME\t\tOCCUPANCY\n")
+		write_file.write("--\t\t----\t\t---------\n")
+		for conformer in res["missing"]:
+			write_file.write(str(conformer) + "\t\t" + str(correl.retrieve_from_id(conformer)) + "\t" 
+								+ str(correl.fort38_by_id[conformer][1]) + "\n")
+		write_file.close()
+
+	with open("incorrect_conformers.txt", "w") as write_file:
+		write_file.write("ID\t\tNAME\t\tFORT38OCCUPANCY\t\tPARSEROCCUPANCY\n")
+		write_file.write("--\t\t----\t\t---------------\t\t---------------\n")
+		for conformer in res["incorrect"]:
+			write_file.write(str(conformer) + "\t\t" + str(correl.retrieve_from_id(conformer)) + "\t" 
+								+ str(correl.fort38_by_id[conformer][1]) + "\t\t"
+								+ str(correl.PARSED_OCCUPANCY_BY_ID[conformer]) + "\n")
+		write_file.close()
+
+	# TEST
 	# res = correl.fort38_compare()
 	# print("There are "  + str(len(res["correct"])) + " correct conformers")
 	# print("There are "  + str(len(res["incorrect"])) + " incorrect conformers")
