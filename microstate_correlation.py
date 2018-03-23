@@ -55,15 +55,40 @@ class MicrostateCorrelation(object):
 		# conformer counts and matching it with respective residues. This is 
 		# a useful data structure in this case.
 		self.PARSED_COUNT_BY_ID = {}
-		for residue in range(0, self.MA.trajectory.shape[1], 1):
-			res_conf_count = itemfreq(self.MA.trajectory[:, residue].ravel())
-			self.conf_count_dict[self.MA.residue_list[residue]] = res_conf_count
-			for row in range(res_conf_count.shape[0]):
+		
+		# for residue in range(0, self.MA.trajectory.shape[1], 1):
+		# 	res_conf_count = itemfreq(self.MA.trajectory[:, residue].ravel())
+		# 	self.conf_count_dict[self.MA.residue_list[residue]] = res_conf_count
+		# 	for row in range(res_conf_count.shape[0]):
+		# 		# We will use total_records to calculate conformer occupancy for now.
+		# 		# When the problem mentioned earlier is solved, we can transition to 
+		# 		# state counts
+		# 		conf_id = res_conf_count[row][0]
+		# 		self.PARSED_COUNT_BY_ID[conf_id] = res_conf_count[row][1]
+
+		for record in range(0, self.MA.trajectory.shape[0], 1):
+			# Instead of counting the conformers in each residue, we are observing
+			# the conformers in each record (of the microstate sampling). Why does this help?
+			# Well, we we will be able to factor in the information from state_count, as it 
+			# is in the shape total_records (self.MA.trajectory.shape[0]) x 1. We were unable
+			# to this with the previous method (that is commented above)
+			conf_count_by_record = itemfreq(self.MA.trajectory[record, :].ravel()) # ravel() to make sure it is a 
+			# flat array
+			conf_count_by_record[:,1] = conf_count_by_record[:,1] * self.MA.state_counts[record]
+			# !!! NEED TO FIGURE OUT AN EFFICIENT WAY TO DETERMINE WHETHER A CONFORMER HAS 
+			# BEEN SEEN !!! mem_conf_id = {}
+			for row in range(conf_count_by_record.shape[0]):
 				# We will use total_records to calculate conformer occupancy for now.
 				# When the problem mentioned earlier is solved, we can transition to 
 				# state counts
-				conf_id = res_conf_count[row][0]
-				self.PARSED_COUNT_BY_ID[conf_id] = res_conf_count[row][1]
+				conf_id = conf_count_by_record[row][0] # Itemfreq ALWAYS returns a (K,2) array
+				if(mem_conf_id[conf_id] != True): self.PARSED_COUNT_BY_ID[conf_id] = conf_count_by_record[row, 1]
+				else: self.PARSED_COUNT_BY_ID[conf_id] += (conf_count_by_record[row, 1])
+				# Here we are checking if this id has been seen before. 
+				# if it has, then we will ADD the current occurences. If it hasn't, we will establish it
+				
+				# !!! CAUSES KEY ERROR: 0 !!! mem_conf_id[conf_id] = True
+
 		if(return_case == True): # Add functionality so it is useable outside
 		# the scope of the class 
 			return self.conf_count_dict
@@ -173,30 +198,30 @@ class MicrostateCorrelation(object):
 if __name__ == '__main__':
 	# Execute the functions here
 	correl = MicrostateCorrelation('ms.dat', 'head3.lst', 'fort.38')
-	print('Counting...')
+	#print('Counting...')
 	correl.conformer_count()
-	correl.get_occupancies()
+	#correl.get_occupancies()
 
 	# WRITE FILE
 	# Write txt file detailing missing and incorrect conformers in the format
 	# (conformer id/name       Occupancy)
-	res = correl.fort38_compare()
-	with open("missing_conformers.txt", "w") as write_file:
-		write_file.write("ID\t\tNAME\t\tOCCUPANCY\n")
-		write_file.write("--\t\t----\t\t---------\n")
-		for conformer in res["missing"]:
-			write_file.write(str(conformer) + "\t\t" + str(correl.retrieve_from_id(conformer)) + "\t" 
-								+ str(correl.fort38_by_id[conformer][1]) + "\n")
-		write_file.close()
+	# res = correl.fort38_compare()
+	# with open("missing_conformers.txt", "w") as write_file:
+	# 	write_file.write("ID\t\tNAME\t\tOCCUPANCY\n")
+	# 	write_file.write("--\t\t----\t\t---------\n")
+	# 	for conformer in res["missing"]:
+	# 		write_file.write(str(conformer) + "\t\t" + str(correl.retrieve_from_id(conformer)) + "\t" 
+	# 							+ str(correl.fort38_by_id[conformer][1]) + "\n")
+	# 	write_file.close()
 
-	with open("incorrect_conformers.txt", "w") as write_file:
-		write_file.write("ID\t\tNAME\t\tFORT38OCCUPANCY\t\tPARSEROCCUPANCY\n")
-		write_file.write("--\t\t----\t\t---------------\t\t---------------\n")
-		for conformer in res["incorrect"]:
-			write_file.write(str(conformer) + "\t\t" + str(correl.retrieve_from_id(conformer)) + "\t" 
-								+ str(correl.fort38_by_id[conformer][1]) + "\t\t"
-								+ str(correl.PARSED_OCCUPANCY_BY_ID[conformer]) + "\n")
-		write_file.close()
+	# with open("incorrect_conformers.txt", "w") as write_file:
+	# 	write_file.write("ID\t\tNAME\t\tFORT38OCCUPANCY\t\tPARSEROCCUPANCY\n")
+	# 	write_file.write("--\t\t----\t\t---------------\t\t---------------\n")
+	# 	for conformer in res["incorrect"]:
+	# 		write_file.write(str(conformer) + "\t\t" + str(correl.retrieve_from_id(conformer)) + "\t" 
+	# 							+ str(correl.fort38_by_id[conformer][1]) + "\t\t"
+	# 							+ str(correl.PARSED_OCCUPANCY_BY_ID[conformer]) + "\n")
+	# 	write_file.close()
 
 	# TEST
 	# res = correl.fort38_compare()
@@ -237,10 +262,11 @@ if __name__ == '__main__':
 	# 	 break
 
 	# # TEST
-	# for i in np.sort(correl.PARSED_COUNT_BY_ID.keys()):
+	# for i in correl.PARSED_COUNT_BY_ID.keys():
 	# 	 print(str(i) + "    " + str(correl.PARSED_COUNT_BY_ID[i]))
 	# 	 print(len(correl.PARSED_COUNT_BY_ID.keys()))
-	# 	 break
+
+
 
 	# # TEST 
 	# print(correl.MA.trajectory[-3:])
